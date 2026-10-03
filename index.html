@@ -27,7 +27,7 @@
     "codeRepository": "https://github.com/majiayu000/keyspoor",
     "programmingLanguage": "Rust",
     "runtimePlatform": "macOS, Linux, Windows",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "license": "https://github.com/majiayu000/keyspoor/blob/main/LICENSE",
     "sameAs": [
       "https://crates.io/crates/keyspoor",
@@ -90,15 +90,16 @@
       <h1>Find exposed secrets.<br>Keep the evidence useful.</h1>
       <p class="lead">Keyspoor is a secret scanner for repositories, CI and AI coding agents. Scan files, Git history and archives with 225 rules, precise locations and redacted results.</p>
       <div class="links"><a href="#install">Install Keyspoor →</a><a href="https://docs.rs/keyspoor">Rust API reference</a><a href="https://github.com/majiayu000/keyspoor/blob/main/README.md">CLI documentation</a></div>
-      <p class="note" style="margin-top:24px">Current version 0.1.1 · Apache-2.0 · Rust APIs may change before 1.0</p>
+      <p class="note" style="margin-top:24px">Current version 0.1.2 · Apache-2.0 · Rust APIs may change before 1.0</p>
     </div>
     <section id="install" aria-labelledby="install-heading">
-      <h2 id="install-heading">One native scanner. Two install paths.</h2>
+      <h2 id="install-heading">One native scanner. Three install paths.</h2>
       <div class="grid">
         <div class="card"><h3>Rust / Cargo</h3><p>Install the CLI with Rust 1.96 or newer.</p><pre><code>cargo install keyspoor --locked
 keyspoor scan . --format jsonl</code></pre><a href="https://crates.io/crates/keyspoor">Keyspoor on crates.io</a></div>
         <div class="card"><h3>Node.js / npm</h3><p>Run the native Rust CLI with Node.js 20+.</p><pre><code>npm install -g keyspoor
 keyspoor scan . --format jsonl</code></pre><a href="https://www.npmjs.com/package/keyspoor">Keyspoor on npm</a></div>
+        <div class="card"><h3>Homebrew</h3><p>Install on macOS or supported Linux GNU systems.</p><pre><code>brew install majiayu000/tap/keyspoor</code></pre><a href="https://github.com/majiayu000/homebrew-tap/blob/main/Formula/keyspoor.rb">Homebrew formula</a></div>
       </div>
       <p class="note" style="margin-top:20px">The npm package bundles binaries for macOS ARM64/x64, Linux GNU ARM64/x64 and Windows x64. Linux builds use Ubuntu 24.04; older glibc and Alpine/musl are not supported targets. No install hooks or runtime binary downloads. This is a CLI launcher, not a JavaScript SDK. <a href="https://github.com/majiayu000/keyspoor/releases">Standalone releases</a> are available through GitHub.</p>
     </section>
@@ -117,6 +118,10 @@ let findings = engine.scan_bytes("config.env", input)?;</code></pre></article>
       </div>
       <p style="margin-top:22px">CLI exit codes distinguish a complete scan without reported findings (<code>0</code>), a complete scan with findings (<code>1</code>) and errors or incomplete scans (<code>2</code>). Baselines and ignores affect what is reported.</p>
     </section>
+    <section id="github-action"><h2>Use Keyspoor in GitHub Actions</h2><p>Add a scanner step after checkout. The Action saves a redacted report and fails on findings or incomplete scans.</p><pre><code>- uses: majiayu000/keyspoor@v1
+  with:
+    path: .
+    format: sarif</code></pre><p><a href="https://github.com/majiayu000/keyspoor#github-action">Action inputs, outputs and report upload example</a></p></section>
     <section id="comparison" aria-labelledby="comparison-heading">
       <h2 id="comparison-heading">Compare the capability you actually need</h2>
       <p>The repository includes research on 22 external projects, including detect-secrets, Gitleaks, TruffleHog and Kingfisher. A format rule, an offline detector and a live credential validator have different boundaries. Start with those boundaries before comparing timing.</p>
