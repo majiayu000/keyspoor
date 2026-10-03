@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Keyspoor — Offline Rust Secret Scanner for Git, CI and AI Agents</title>
+  <meta name="description" content="Keyspoor is an independent Rust secret scanner with 225 rules, Git history and staged scanning, archives, redacted JSON/SARIF, a Rust library and an MCP server.">
+  <link rel="canonical" href="https://majiayu000.github.io/keyspoor/">
+  <meta name="robots" content="index,follow">
+  <meta name="theme-color" content="#101d28">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Keyspoor">
+  <meta property="og:title" content="Keyspoor — Offline Rust Secret Scanner">
+  <meta property="og:description" content="Scan files, Git history and archives. Reuse the Rust engine or connect an AI agent through MCP. Results are redacted by default.">
+  <meta property="og:url" content="https://majiayu000.github.io/keyspoor/">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Keyspoor — Offline Rust Secret Scanner">
+  <meta name="twitter:description" content="225 rules. Files, Git and archives. Native CLI, reusable Rust library and read-only MCP server.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "Keyspoor",
+    "description": "Independent offline Rust secret scanner for files, Git repositories, archives, CI and AI agents.",
+    "url": "https://majiayu000.github.io/keyspoor/",
+    "codeRepository": "https://github.com/majiayu000/keyspoor",
+    "programmingLanguage": "Rust",
+    "runtimePlatform": "macOS, Linux, Windows",
+    "version": "0.1.0",
+    "license": "https://github.com/majiayu000/keyspoor/blob/main/LICENSE",
+    "sameAs": [
+      "https://crates.io/crates/keyspoor",
+      "https://www.npmjs.com/package/keyspoor",
+      "https://docs.rs/keyspoor"
+    ]
+  }
+  </script>
+  <style>
+    :root { color-scheme: light; --ink: #152635; --muted: #4a6171; --paper: #f6f7f5; --accent: #075d58; --line: #d5dfdc; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.65 system-ui, sans-serif; }
+    a { color: var(--accent); text-underline-offset: .2em; }
+    a:hover { text-decoration-thickness: 2px; }
+    a:focus-visible { outline: 3px solid #ce7a23; outline-offset: 4px; }
+    .wrap { max-width: 1100px; padding: 0 28px; margin: auto; }
+    header { border-bottom: 1px solid var(--line); }
+    nav { min-height: 78px; display: flex; flex-wrap: wrap; gap: 24px; align-items: center; padding: 16px 0; }
+    .brand { font-size: 22px; font-weight: 800; letter-spacing: -.04em; color: var(--ink); margin-right: auto; text-decoration: none; }
+    nav a { font-size: 14px; }
+    .hero { padding: 78px 0 52px; max-width: 860px; }
+    .eyebrow { color: var(--accent); font: 700 13px/1.4 ui-monospace, monospace; letter-spacing: .09em; text-transform: uppercase; }
+    h1 { font-size: clamp(38px, 6vw, 66px); line-height: 1.09; letter-spacing: -.055em; margin: 20px 0 24px; max-width: 850px; }
+    h2 { font-size: 30px; letter-spacing: -.025em; line-height: 1.25; margin: 0 0 20px; }
+    h3 { font-size: 20px; line-height: 1.4; margin: 0 0 12px; }
+    p { margin: 0 0 18px; }
+    .lead { font-size: 21px; color: var(--muted); max-width: 740px; }
+    .links { display: flex; flex-wrap: wrap; gap: 14px 24px; margin-top: 26px; font-weight: 600; }
+    section { padding: 42px 0; border-top: 1px solid var(--line); scroll-margin-top: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+    .card { padding: 26px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+    .card p:last-child { margin-bottom: 0; }
+    pre { margin: 16px 0; padding: 22px; overflow-x: auto; background: #101d28; color: #e6f4ef; border-radius: 9px; line-height: 1.7; font-size: 14px; }
+    code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    p code, td code { font-size: .9em; }
+    .note { font-size: 14px; color: var(--muted); }
+    .table-scroll { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 20px 0; }
+    th, td { text-align: left; vertical-align: top; padding: 16px; border-bottom: 1px solid var(--line); }
+    th { background: #e9efec; }
+    td:first-child { font-weight: 650; min-width: 170px; }
+    ul { padding-left: 22px; }
+    li { margin: 8px 0; }
+    footer { padding: 36px 0 50px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+    .skip { position: absolute; top: -100px; background: #fff; padding: 8px; }
+    .skip:focus { top: 8px; }
+    @media (max-width: 650px) { .wrap { padding: 0 20px; } .grid { grid-template-columns: 1fr; } .hero { padding-top: 48px; } nav { gap: 16px; } .brand { flex-basis: 100%; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><div class="wrap"><nav aria-label="Main navigation">
+    <a class="brand" href="https://majiayu000.github.io/keyspoor/">Keyspoor</a>
+    <a href="#install">Install</a><a href="#capabilities">Capabilities</a><a href="#evidence">Benchmarks</a>
+    <a href="#chinese" lang="zh-CN">中文</a><a href="https://github.com/majiayu000/keyspoor">GitHub ↗</a>
+  </nav></div></header>
+  <main id="main" class="wrap">
+    <div class="hero">
+      <p class="eyebrow">Independent Rust engine · Offline detection</p>
+      <h1>Find exposed secrets.<br>Keep the evidence useful.</h1>
+      <p class="lead">Keyspoor is a secret scanner for repositories, CI and AI coding agents. Scan files, Git history and archives with 225 rules, precise locations and redacted results.</p>
+      <div class="links"><a href="#install">Install Keyspoor →</a><a href="https://docs.rs/keyspoor">Rust API reference</a><a href="https://github.com/majiayu000/keyspoor/blob/main/README.md">CLI documentation</a></div>
+      <p class="note" style="margin-top:24px">Initial version 0.1.0 · Apache-2.0 · Rust APIs may change before 1.0</p>
+    </div>
+    <section id="install" aria-labelledby="install-heading">
+      <h2 id="install-heading">One native scanner. Two install paths.</h2>
+      <div class="grid">
+        <div class="card"><h3>Rust / Cargo</h3><p>Install the CLI with Rust 1.96 or newer.</p><pre><code>cargo install keyspoor --locked
+keyspoor scan . --format jsonl</code></pre><a href="https://crates.io/crates/keyspoor">Keyspoor on crates.io</a></div>
+        <div class="card"><h3>Node.js / npm</h3><p>Run the native Rust CLI with Node.js 20+.</p><pre><code>npm install -g keyspoor
+keyspoor scan . --format jsonl</code></pre><a href="https://www.npmjs.com/package/keyspoor">Keyspoor on npm</a></div>
+      </div>
+      <p class="note" style="margin-top:20px">The npm package bundles binaries for macOS ARM64/x64, Linux GNU ARM64/x64 and Windows x64. No install hooks or runtime binary downloads. This is a CLI launcher, not a JavaScript SDK. <a href="https://github.com/majiayu000/keyspoor/releases">Standalone releases</a> are available through GitHub.</p>
+    </section>
+    <section id="capabilities" aria-labelledby="capabilities-heading">
+      <h2 id="capabilities-heading">From local files to agent workflows</h2>
+      <div class="grid">
+        <article class="card"><h3>Repository-aware scanning</h3><p>Read the staged index, inspect locally reachable Git history, respect ignore files and track existing findings with fingerprint baselines. History scanning reuses unique Git blobs while preserving commit and path occurrences.</p><pre><code>keyspoor staged .
+keyspoor history . --range main..HEAD</code></pre></article>
+        <article class="card"><h3>Agent-friendly results</h3><p>Use JSON, streaming JSONL or SARIF. The read-only MCP server exposes <code>scan_text</code> and <code>scan_paths</code>, with progress, cancellation and bounded previews. Errors and incomplete scans remain explicit.</p><pre><code>keyspoor mcp --root /path/to/project
+keyspoor scan . --format sarif</code></pre></article>
+        <article class="card"><h3>A reusable Rust library</h3><p>Compile rules once and reuse an <code>Engine</code> across requests and threads. Custom JSON rules can define capture groups, keyword gates, entropy thresholds, path filters and allowlists.</p><pre><code>use keyspoor::{Engine, EngineConfig};
+
+let engine = Engine::new(EngineConfig::default())?;
+let findings = engine.scan_bytes("config.env", input)?;</code></pre></article>
+        <article class="card"><h3>Offline, redacted by default</h3><p>Reports contain rules, byte locations, fingerprints and explanations, without raw secrets or source snippets. Scan UTF-16 and single-layer Base64, or expand ZIP/tar/gzip archives within depth and byte budgets.</p><p class="note">No provider requests, credential validation or revocation. Archive members are never written to disk.</p></article>
+      </div>
+      <p style="margin-top:22px">CLI exit codes distinguish a complete scan without reported findings (<code>0</code>), a complete scan with findings (<code>1</code>) and errors or incomplete scans (<code>2</code>). Baselines and ignores affect what is reported.</p>
+    </section>
+    <section id="comparison" aria-labelledby="comparison-heading">
+      <h2 id="comparison-heading">Compare the capability you actually need</h2>
+      <p>The repository includes research on 22 external projects, including detect-secrets, Gitleaks, TruffleHog and Kingfisher. A format rule, an offline detector and a live credential validator have different boundaries. Start with those boundaries before comparing timing.</p>
+      <div class="table-scroll"><table>
+        <thead><tr><th scope="col">Decision</th><th scope="col">Keyspoor today</th><th scope="col">Evidence and limits</th></tr></thead>
+        <tbody>
+          <tr><td>Embed a Rust scanner</td><td>Independent engine with reusable byte-scanning and streaming APIs.</td><td><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/DECISIONS.md">Implementation decisions</a>. Uses general-purpose libraries; no other scanner SDK.</td></tr>
+          <tr><td>Audit rule coverage</td><td>225 default rules: 221 adapted MIT-licensed Gitleaks rules and four independently written rules.</td><td><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/RULE_SOURCES.md">Rule provenance</a>. Rule count is not provider count or accuracy; not a Gitleaks-compatible engine.</td></tr>
+          <tr><td>Connect a coding agent</td><td>Read-only MCP, persistent JSONL requests and redacted structured output.</td><td><a href="https://github.com/majiayu000/keyspoor/blob/main/README.md#agent-interfaces">Interface contracts</a>. MCP previews are bounded; root checks are not an OS sandbox.</td></tr>
+          <tr><td>Scan cloud sources or validate credentials</td><td>No cloud connectors, provider verification or revocation.</td><td><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/FEATURES.md">Feature matrix and alternatives</a>. No GPU/ML, cross-function analysis or Python/JS in-process bindings.</td></tr>
+        </tbody>
+      </table></div>
+      <p><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/FEATURES.md">Read the full feature and competitor research →</a></p>
+    </section>
+    <section id="evidence" aria-labelledby="evidence-heading">
+      <h2 id="evidence-heading">Measurements with their boundaries attached</h2>
+      <p>The v6 metadata-sharing optimization was measured against the previous version using 20 alternating pairs on Apple M2 Max/macOS. These are within-project comparisons, not claims to outperform every scanner.</p>
+      <div class="table-scroll"><table>
+        <thead><tr><th scope="col">Synthetic workload</th><th scope="col">Median scanner peak RSS</th><th scope="col">Scanner CPU change</th></tr></thead>
+        <tbody><tr><td>One file, 100,000 findings</td><td>99.86 → 59.59 MiB</td><td>−8.74%</td></tr><tr><td>16 files, four workers, 100,000 findings</td><td>118.85 → 76.38 MiB</td><td>−8.55%</td></tr></tbody>
+      </table></div>
+      <p>Regular throughput and Git workloads were broadly unchanged; some sparse workloads had slightly higher RSS. Previously observed synthetic regression sets retained 600 true positives, 25 false positives and zero false negatives. These results do not establish real-world precision or production-wide recall.</p>
+      <div class="links"><a href="https://github.com/majiayu000/keyspoor/blob/main/bench/results/v6/README.md">v6 measurements and raw data</a><a href="https://github.com/majiayu000/keyspoor/blob/main/bench/README.md">Reproduction methodology</a><a href="https://github.com/majiayu000/keyspoor/blob/main/bench/results/v4/quality-comparison.md">Versioned cross-tool comparison</a></div>
+      <p class="note" style="margin-top:20px">Historical evidence uses the former project name <code>secret-scan</code>. Recorded commands and binary hashes are preserved. Offline benchmarks do not measure live verification; unsupported tools and modes are not scored as zero.</p>
+    </section>
+    <section id="chinese" lang="zh-CN" aria-labelledby="chinese-heading">
+      <h2 id="chinese-heading">Keyspoor：面向开发者和 Agent 的离线密钥扫描器</h2>
+      <p>使用自研 Rust 扫描引擎，支持文件、Git 暂存区、历史记录和归档，默认提供 225 条规则。可通过 Cargo 或 npm 安装原生 CLI，也可作为 Rust 库或只读 MCP 服务接入工具链。</p>
+      <p>报告默认脱敏，保留规则、位置、指纹和解释；扫描错误不会伪装成干净结果。目前没有云连接器、凭据活性验证、GPU/ML 或跨函数分析。Benchmark 保留硬件、参数、原始数据与适用边界。</p>
+      <p><a href="https://github.com/majiayu000/keyspoor/blob/main/README.zh-CN.md">中文安装与使用文档 →</a></p>
+    </section>
+  </main>
+  <footer><div class="wrap"><p><strong>Keyspoor</strong> · Open source under <a href="https://github.com/majiayu000/keyspoor/blob/main/LICENSE">Apache-2.0</a>. Adapted rules retain their <a href="https://github.com/majiayu000/keyspoor/blob/main/THIRD_PARTY_NOTICES">upstream attribution</a>.</p><p><a href="https://github.com/majiayu000/keyspoor/issues">Issues and feedback</a> · <a href="https://github.com/majiayu000/keyspoor">Source code</a> · <a href="sitemap.xml">Sitemap</a></p></div></footer>
+</body>
+</html>
