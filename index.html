@@ -31,6 +31,7 @@
     "license": "https://github.com/majiayu000/keyspoor/blob/main/LICENSE",
     "sameAs": [
       "https://crates.io/crates/keyspoor",
+      "https://www.npmjs.com/package/keyspoor",
       "https://docs.rs/keyspoor"
     ]
   }
@@ -96,8 +97,8 @@
       <div class="grid">
         <div class="card"><h3>Rust / Cargo</h3><p>Install the CLI with Rust 1.96 or newer.</p><pre><code>cargo install keyspoor --locked
 keyspoor scan . --format jsonl</code></pre><a href="https://crates.io/crates/keyspoor">Keyspoor on crates.io</a></div>
-        <div class="card"><h3>Node.js / npm</h3><p>Run the native Rust CLI with Node.js 20+.</p><pre><code>npm install -g https://github.com/majiayu000/keyspoor/releases/download/v0.1.1/keyspoor-0.1.1.tgz
-keyspoor scan . --format jsonl</code></pre><a href="https://github.com/majiayu000/keyspoor/releases">Download the npm tarball</a><p class="note">npm registry publication is pending publisher authentication.</p></div>
+        <div class="card"><h3>Node.js / npm</h3><p>Run the native Rust CLI with Node.js 20+.</p><pre><code>npm install -g keyspoor
+keyspoor scan . --format jsonl</code></pre><a href="https://www.npmjs.com/package/keyspoor">Keyspoor on npm</a></div>
       </div>
       <p class="note" style="margin-top:20px">The npm package bundles binaries for macOS ARM64/x64, Linux GNU ARM64/x64 and Windows x64. Linux builds use Ubuntu 24.04; older glibc and Alpine/musl are not supported targets. No install hooks or runtime binary downloads. This is a CLI launcher, not a JavaScript SDK. <a href="https://github.com/majiayu000/keyspoor/releases">Standalone releases</a> are available through GitHub.</p>
     </section>
