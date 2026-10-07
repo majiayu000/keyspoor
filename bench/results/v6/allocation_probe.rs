@@ -1,6 +1,6 @@
 //! Single-thread, warmed scan allocation probe. Build with allocation_probe.py.
 //! Counters track requested allocator layouts, not RSS or allocator usable size.
-use secret_scan::{Engine, EngineConfig, Finding};
+use keyspoor::{Engine, EngineConfig, Finding};
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering::Relaxed};
 

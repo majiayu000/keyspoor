@@ -60,6 +60,15 @@ Regular throughput/real-source workloads are essentially unchanged. [20-pair raw
 
 Preserve the old binary, fixed corpora and original artifacts; use new output paths. Allocation comparison requires compiling the probe against each corresponding release library, or rerunning its frozen executable/provenance with --run-only. The driver resolves exact dependency artifacts from Cargo JSON, including fresh cached builds.
 
+The current allocation driver builds the renamed `keyspoor` crate. Its output
+measures the current checkout and does not reproduce the historical v6 binary
+by itself. To rebuild the historical `secret_scan` probe, use the source and
+driver from that recorded revision; to rerun a preserved probe, use `--run-only`
+with its original executable and provenance. The paired CLI drivers below still
+use the preserved `secret-scan` binaries whose hashes are recorded in
+`manifest.json`; `cargo build --release` now produces `target/release/keyspoor`
+and does not rebuild or replace those historical executables.
+
 ```sh
 python3 bench/results/v6/allocation_probe.py --label reproduced --binary /tmp/v6-probe-new --output /tmp/v6-alloc-new.json
 python3 bench/results/v6/paired-throughput.py /tmp/v6-throughput-new.json

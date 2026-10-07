@@ -22,7 +22,7 @@ def sha256(path):
 
 
 def current_rlibs(cargo_stdout):
-    wanted = {"secret_scan", "serde_json", "blake3"}
+    wanted = {"keyspoor", "serde_json", "blake3"}
     artifacts = {name: set() for name in wanted}
     for line in cargo_stdout.splitlines():
         event = json.loads(line)
@@ -63,9 +63,9 @@ def main():
         cargo_command = ["cargo", "build", "--release", "--lib", "--locked", "--message-format=json", "--target-dir", str(target_dir)]
         cargo = subprocess.run(cargo_command, cwd=root, check=True, stdout=subprocess.PIPE, text=True)
         rlibs = current_rlibs(cargo.stdout)
-        library = rlibs["secret_scan"]
+        library = rlibs["keyspoor"]
         command = ["rustc", "--edition=2024", "-C", "opt-level=3", "-C", "lto=thin", "-C", "codegen-units=1", str(source), "-L", f"dependency={release / 'deps'}", "-o", str(binary)]
-        for dependency in ("secret_scan", "serde_json", "blake3"):
+        for dependency in ("keyspoor", "serde_json", "blake3"):
             command.extend(["--extern", f"{dependency}={rlibs[dependency]}"])
         subprocess.run(command, cwd=root, check=True)
         build = {
