@@ -3,26 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Keyspoor — Offline Rust Secret Scanner for Git, CI and AI Agents</title>
-  <meta name="description" content="Keyspoor is an independent Rust secret scanner with 225 rules, Git history and staged scanning, archives, redacted JSON/SARIF, a Rust library and an MCP server.">
+  <title>Keyspoor — Offline Secret Scanning for AI Coding Workflows</title>
+  <meta name="description" content="Offline secret scanning for AI coding workflows. Connect agents through read-only MCP, block findings with Git hooks or CI, and inspect redacted reports.">
   <link rel="canonical" href="https://majiayu000.github.io/keyspoor/">
   <meta name="robots" content="index,follow">
   <meta name="theme-color" content="#101d28">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Keyspoor">
-  <meta property="og:title" content="Keyspoor — Offline Rust Secret Scanner">
-  <meta property="og:description" content="Scan files, Git history and archives. Reuse the Rust engine or connect an AI agent through MCP. Results are redacted by default.">
+  <meta property="og:title" content="Keyspoor — Offline Secret Scanning for AI Coding Workflows">
+  <meta property="og:description" content="Connect coding agents through MCP. Block findings with Git hooks or CI. Scan locally with redacted reports and an independent Rust engine.">
   <meta property="og:url" content="https://majiayu000.github.io/keyspoor/">
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Keyspoor — Offline Rust Secret Scanner">
-  <meta name="twitter:description" content="225 rules. Files, Git and archives. Native CLI, reusable Rust library and read-only MCP server.">
+  <meta name="twitter:title" content="Keyspoor — Offline Secret Scanning for AI Coding Workflows">
+  <meta name="twitter:description" content="Offline scanning, read-only MCP, Git hooks and CI checks. Native Rust CLI with redacted reports.">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareSourceCode",
     "name": "Keyspoor",
-    "description": "Independent offline Rust secret scanner for files, Git repositories, archives, CI and AI agents.",
+    "description": "Offline secret scanning for AI coding workflows, with read-only MCP, staged Git checks, CI and a reusable Rust engine.",
     "url": "https://majiayu000.github.io/keyspoor/",
     "codeRepository": "https://github.com/majiayu000/keyspoor",
     "programmingLanguage": "Rust",
@@ -63,6 +63,7 @@
     pre { margin: 16px 0; padding: 22px; overflow-x: auto; background: #101d28; color: #e6f4ef; border-radius: 9px; line-height: 1.7; font-size: 14px; }
     code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
     p code, td code { font-size: .9em; }
+    .demo { display: block; width: 100%; height: auto; border-radius: 9px; }
     .note { font-size: 14px; color: var(--muted); }
     .table-scroll { overflow-x: auto; }
     table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 20px 0; }
@@ -81,17 +82,25 @@
   <a class="skip" href="#main">Skip to content</a>
   <header><div class="wrap"><nav aria-label="Main navigation">
     <a class="brand" href="https://majiayu000.github.io/keyspoor/">Keyspoor</a>
-    <a href="#install">Install</a><a href="#capabilities">Capabilities</a><a href="#evidence">Benchmarks</a>
+    <a href="#install">Install</a><a href="#capabilities">Capabilities</a><a href="#demo">Demo</a><a href="#evidence">Benchmarks</a>
     <a href="#chinese" lang="zh-CN">中文</a><a href="https://github.com/majiayu000/keyspoor">GitHub ↗</a>
   </nav></div></header>
   <main id="main" class="wrap">
     <div class="hero">
       <p class="eyebrow">Independent Rust engine · Offline detection</p>
-      <h1>Find exposed secrets.<br>Keep the evidence useful.</h1>
-      <p class="lead">Keyspoor is a secret scanner for repositories, CI and AI coding agents. Scan files, Git history and archives with 225 rules, precise locations and redacted results.</p>
-      <div class="links"><a href="#install">Install Keyspoor →</a><a href="https://docs.rs/keyspoor">Rust API reference</a><a href="https://github.com/majiayu000/keyspoor/blob/main/README.md">CLI documentation</a></div>
+      <h1>Secret scanning for<br>AI coding workflows.</h1>
+      <p class="lead">Give your coding agent offline scanning tools through MCP. Block findings with staged Git hooks or CI, then use precise locations and redacted reports to review the repair.</p>
+      <div class="links"><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/AGENT_SETUP.md">Connect your agent →</a><a href="#demo">Watch the commit demo</a><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/CI_SETUP.md">Set up CI / Git hooks</a></div>
       <p class="note" style="margin-top:24px">Current version 0.1.3 · Apache-2.0 · Rust APIs may change before 1.0</p>
     </div>
+    <section id="demo" aria-labelledby="demo-heading">
+      <h2 id="demo-heading">Detect. Block the commit. Repair. Pass.</h2>
+      <img class="demo" src="first-scan.gif" width="1080" height="610" alt="Actual Keyspoor 0.1.3 terminal run: staged synthetic credential detected, pre-commit hook blocks the commit, removing the literal yields a clean scan and a successful commit.">
+      <p style="margin-top:20px">This recording uses invented input in a disposable Git repository: a finding returns <code>1</code> and blocks the commit; removing the literal returns <code>0</code> and allows the repaired commit. No agent is involved in this hook demo.</p>
+      <pre><code># From a checkout, with Git and Keyspoor installed:
+sh examples/first-scan.sh</code></pre>
+      <p class="note">MCP makes tools available to agents; it does not guarantee a scan before every commit. Use a Git hook or a required CI check for enforcement. <a href="https://github.com/majiayu000/keyspoor/blob/main/examples/first-scan.sh">Inspect the runnable demo</a>.</p>
+    </section>
     <section id="install" aria-labelledby="install-heading">
       <h2 id="install-heading">One native scanner. Three install paths.</h2>
       <div class="grid">
@@ -146,11 +155,12 @@ let findings = engine.scan_bytes("config.env", input)?;</code></pre></article>
       </table></div>
       <p>Regular throughput and Git workloads were broadly unchanged; some sparse workloads had slightly higher RSS. Previously observed synthetic regression sets retained 600 true positives, 25 false positives and zero false negatives. These results do not establish real-world precision or production-wide recall.</p>
       <div class="links"><a href="https://github.com/majiayu000/keyspoor/blob/main/bench/results/v6/README.md">v6 measurements and raw data</a><a href="https://github.com/majiayu000/keyspoor/blob/main/bench/README.md">Reproduction methodology</a><a href="https://github.com/majiayu000/keyspoor/blob/main/bench/results/v4/quality-comparison.md">Versioned cross-tool comparison</a></div>
+      <p>Reviewing 119 findings from three pinned public snapshots established 56 non-secret spans, 34 intentional test fixtures, 24 evaluation artifacts and five unresolved findings. These are workload-specific context labels; rule behavior is unchanged in 0.1.3. <a href="https://github.com/majiayu000/keyspoor/blob/main/docs/FINDING_REVIEW.md">Inspect every location and the correction backlog</a> · <a href="https://github.com/majiayu000/keyspoor/blob/main/docs/USAGE.md">Dated usage baseline</a>.</p>
       <p class="note" style="margin-top:20px">Historical evidence uses the former project name <code>secret-scan</code>. Recorded commands and binary hashes are preserved. Offline benchmarks do not measure live verification; unsupported tools and modes are not scored as zero.</p>
     </section>
     <section id="chinese" lang="zh-CN" aria-labelledby="chinese-heading">
-      <h2 id="chinese-heading">Keyspoor：面向开发者和 Agent 的离线密钥扫描器</h2>
-      <p>使用自研 Rust 扫描引擎，支持文件、Git 暂存区、历史记录和归档，默认提供 225 条规则。可通过 Cargo 或 npm 安装原生 CLI，也可作为 Rust 库或只读 MCP 服务接入工具链。</p>
+      <h2 id="chinese-heading">Keyspoor：面向 AI 编程工作流的离线密钥扫描器</h2>
+      <p>通过只读 MCP 给 Agent 提供本地扫描工具，通过 Git hook 或必需的 CI 检查拦截命中。自研 Rust 引擎支持文件、Git 暂存区、历史和归档，输出脱敏报告；也可嵌入 Rust 应用。</p>
       <p>报告默认脱敏，保留规则、位置、指纹和解释；扫描错误不会伪装成干净结果。目前没有云连接器、凭据活性验证、GPU/ML 或跨函数分析。Benchmark 保留硬件、参数、原始数据与适用边界。</p>
       <p><a href="https://github.com/majiayu000/keyspoor/blob/main/README.zh-CN.md">中文安装与使用文档 →</a></p>
     </section>
