@@ -27,7 +27,7 @@
     "codeRepository": "https://github.com/majiayu000/keyspoor",
     "programmingLanguage": "Rust",
     "runtimePlatform": "macOS, Linux, Windows",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "license": "https://github.com/majiayu000/keyspoor/blob/main/LICENSE",
     "sameAs": [
       "https://crates.io/crates/keyspoor",
@@ -91,7 +91,7 @@
       <h1>Secret scanning for<br>AI coding workflows.</h1>
       <p class="lead">Give your coding agent offline scanning tools through MCP. Block findings with staged Git hooks or CI, then use precise locations and redacted reports to review the repair.</p>
       <div class="links"><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/AGENT_SETUP.md">Connect your agent →</a><a href="#demo">Watch the commit demo</a><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/CI_SETUP.md">Set up CI / Git hooks</a></div>
-      <p class="note" style="margin-top:24px">Current version 0.1.3 · Apache-2.0 · Rust APIs may change before 1.0</p>
+      <p class="note" style="margin-top:24px">Current version 0.1.4 · Apache-2.0 · Rust APIs may change before 1.0</p>
     </div>
     <section id="demo" aria-labelledby="demo-heading">
       <h2 id="demo-heading">Detect. Block the commit. Repair. Pass.</h2>
@@ -104,15 +104,15 @@ sh examples/first-scan.sh</code></pre>
     <section id="install" aria-labelledby="install-heading">
       <h2 id="install-heading">One native scanner. Three install paths.</h2>
       <div class="grid">
-        <div class="card"><h3>Rust / Cargo</h3><p>Install the CLI with Rust 1.96 or newer.</p><pre><code>cargo install keyspoor --version 0.1.3 --locked
+        <div class="card"><h3>Rust / Cargo</h3><p>Install the CLI with Rust 1.96 or newer.</p><pre><code>cargo install keyspoor --version 0.1.4 --locked
 keyspoor scan . --format jsonl</code></pre><a href="https://crates.io/crates/keyspoor">Keyspoor on crates.io</a></div>
-        <div class="card"><h3>Node.js / npm</h3><p>Run the native Rust CLI with Node.js 20+.</p><pre><code>npm install -g keyspoor@0.1.3
+        <div class="card"><h3>Node.js / npm</h3><p>Run the native Rust CLI with Node.js 20+.</p><pre><code>npm install -g keyspoor@0.1.4
 keyspoor scan . --format jsonl</code></pre><a href="https://www.npmjs.com/package/keyspoor">Keyspoor on npm</a></div>
         <div class="card"><h3>Homebrew</h3><p>Install on macOS or supported Linux GNU systems.</p><pre><code>brew install majiayu000/tap/keyspoor</code></pre><a href="https://github.com/majiayu000/homebrew-tap/blob/main/Formula/keyspoor.rb">Homebrew formula</a></div>
       </div>
       <p class="note" style="margin-top:20px">The npm package bundles binaries for macOS ARM64/x64, Linux GNU ARM64/x64 and Windows x64. Linux builds use Ubuntu 24.04; older glibc and Alpine/musl are not supported targets. No install hooks or runtime binary downloads. This is a CLI launcher, not a JavaScript SDK. <a href="https://github.com/majiayu000/keyspoor/releases">Standalone releases</a> are available through GitHub.</p>
     </section>
-    <section id="quickstart"><h2>Try a redacted finding in one command</h2><p>With Node.js 20+, run this made-up example in a macOS/Linux terminal.</p><pre><code>printf 'password=KspDemo_7zQ2mX9pL4vN6sR8\n' | npx -y keyspoor@0.1.3 scan - --format json</code></pre><p>Expected: one finding with <code>redacted: [REDACTED]</code> and exit code <code>1</code>. Clean scans return <code>0</code>; errors or incomplete scans return <code>2</code>. First installation needs npm access; detection runs locally.</p><div class="links"><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/AGENT_SETUP.md">Connect Codex, Claude Code or Cursor →</a><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/CI_SETUP.md">Set up CI and a staged Git hook →</a><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/ADOPTION.md">Trial results and feedback →</a></div></section>
+    <section id="quickstart"><h2>Try a redacted finding in one command</h2><p>With Node.js 20+, run this made-up example in a macOS/Linux terminal.</p><pre><code>printf 'password=KspDemo_7zQ2mX9pL4vN6sR8\n' | npx -y keyspoor@0.1.4 scan - --format json</code></pre><p>Expected: one finding with <code>redacted: [REDACTED]</code> and exit code <code>1</code>. Clean scans return <code>0</code>; errors or incomplete scans return <code>2</code>. First installation needs npm access; detection runs locally.</p><div class="links"><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/AGENT_SETUP.md">Connect Codex, Claude Code or Cursor →</a><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/CI_SETUP.md">Set up CI and a staged Git hook →</a><a href="https://github.com/majiayu000/keyspoor/blob/main/docs/ADOPTION.md">Trial results and feedback →</a></div></section>
     <section id="capabilities" aria-labelledby="capabilities-heading">
       <h2 id="capabilities-heading">From local files to agent workflows</h2>
       <div class="grid">
@@ -155,7 +155,7 @@ let findings = engine.scan_bytes("config.env", input)?;</code></pre></article>
       </table></div>
       <p>Regular throughput and Git workloads were broadly unchanged; some sparse workloads had slightly higher RSS. Previously observed synthetic regression sets retained 600 true positives, 25 false positives and zero false negatives. These results do not establish real-world precision or production-wide recall.</p>
       <div class="links"><a href="https://github.com/majiayu000/keyspoor/blob/main/bench/results/v6/README.md">v6 measurements and raw data</a><a href="https://github.com/majiayu000/keyspoor/blob/main/bench/README.md">Reproduction methodology</a><a href="https://github.com/majiayu000/keyspoor/blob/main/bench/results/v4/quality-comparison.md">Versioned cross-tool comparison</a></div>
-      <p>Reviewing 119 findings from three pinned public snapshots established 56 non-secret spans, 34 intentional test fixtures, 24 evaluation artifacts and five unresolved findings. These are workload-specific context labels; rule behavior is unchanged in 0.1.3. <a href="https://github.com/majiayu000/keyspoor/blob/main/docs/FINDING_REVIEW.md">Inspect every location and the correction backlog</a> · <a href="https://github.com/majiayu000/keyspoor/blob/main/docs/USAGE.md">Dated usage baseline</a>.</p>
+      <p>Reviewing 119 findings from three pinned public snapshots established 56 non-secret spans, 34 intentional test fixtures, 24 evaluation artifacts and five unresolved findings. Version 0.1.4 removes all 56 confirmed non-secret spans in those snapshots while retaining the test/evaluation occurrences. Two unresolved reviewer-note spans are also filtered; the three unresolved JWT-shaped values remain. <a href="https://github.com/majiayu000/keyspoor/blob/main/docs/FINDING_REVIEW.md">Inspect every location and the correction results</a> · <a href="https://github.com/majiayu000/keyspoor/blob/main/docs/USAGE.md">Dated usage baseline</a>.</p>
       <p class="note" style="margin-top:20px">Historical evidence uses the former project name <code>secret-scan</code>. Recorded commands and binary hashes are preserved. Offline benchmarks do not measure live verification; unsupported tools and modes are not scored as zero.</p>
     </section>
     <section id="chinese" lang="zh-CN" aria-labelledby="chinese-heading">
