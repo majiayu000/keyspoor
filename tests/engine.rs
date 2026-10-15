@@ -1152,6 +1152,8 @@ fn engine_semantics_change_configuration_identity_from_previous_versions() {
     for previous in [
         b"secret-scan/configuration/v2\0",
         b"secret-scan/configuration/v3\0",
+        b"secret-scan/configuration/v4\0",
+        b"secret-scan/configuration/v5\0",
     ] {
         let mut old = blake3::Hasher::new();
         old.update(previous);
@@ -1463,6 +1465,34 @@ fn unquoted_configuration_references_do_not_hide_quoted_or_dotted_literals() {
                 .unwrap()
                 .is_empty(),
             "a literal credential was lost"
+        );
+    }
+}
+
+#[test]
+fn custom_rule_with_builtin_id_keeps_rust_matches() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("rules.json");
+    std::fs::write(
+        &path,
+        r#"{"rules":[{"id":"generic-credential-unquoted","name":"Custom credential","pattern":"password: ([A-Za-z0-9]+)","secret_group":1,"confidence":"high"}]}"#,
+    )
+    .unwrap();
+    for builtin_rules in [false, true] {
+        let engine = Engine::new(EngineConfig {
+            builtin_rules,
+            custom_rule_paths: vec![path.clone()],
+            ..Default::default()
+        })
+        .unwrap();
+        let findings = engine
+            .scan_bytes("fixture.rs", b"pub password: SyntheticValueA93,\n")
+            .unwrap();
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.rule_id == "generic-credential-unquoted"),
+            "custom rule must match with builtin_rules={builtin_rules}"
         );
     }
 }

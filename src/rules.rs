@@ -143,6 +143,7 @@ struct RuleFile {
 
 pub(crate) struct CompiledRule {
     pub spec: RuleSpec,
+    pub builtin: bool,
     pub pattern: BytesRegex,
     pub path: Option<Regex>,
     pub allowlist: Vec<CompiledAllowlist>,
@@ -275,7 +276,7 @@ pub(crate) fn compile(
             .chain(generic_assignment_rules())
             .chain([uri_password_rule()])
         {
-            specs.insert(rule.id.clone(), rule);
+            specs.insert(rule.id.clone(), (rule, true));
         }
     }
     for path in paths {
@@ -285,9 +286,9 @@ pub(crate) fn compile(
     let mut shared_allowlists: HashMap<String, Arc<BytesRegex>> = HashMap::new();
     let mut shared_exclusions: HashMap<String, Arc<Regex>> = HashMap::new();
     let mut shared_stopwords: HashMap<Vec<String>, Arc<AhoCorasick>> = HashMap::new();
-    for spec in specs
+    for (spec, builtin) in specs
         .into_values()
-        .filter(|rule| rule.confidence >= confidence)
+        .filter(|(rule, _)| rule.confidence >= confidence)
     {
         ensure!(!spec.id.is_empty(), "rule ID must not be empty");
         ensure!(
@@ -427,6 +428,7 @@ pub(crate) fn compile(
             keyword_suffix: OnceLock::new(),
             explanations: std::array::from_fn(|_| OnceLock::new()),
             spec,
+            builtin,
             pattern,
             path,
             allowlist,
@@ -440,7 +442,7 @@ pub(crate) fn compile(
     Ok(compiled)
 }
 
-fn load_path(path: &Path, specs: &mut BTreeMap<String, RuleSpec>) -> Result<()> {
+fn load_path(path: &Path, specs: &mut BTreeMap<String, (RuleSpec, bool)>) -> Result<()> {
     let metadata =
         std::fs::metadata(path).with_context(|| format!("reading rule path {}", path.display()))?;
     if metadata.is_dir() {
@@ -470,7 +472,7 @@ fn load_path(path: &Path, specs: &mut BTreeMap<String, RuleSpec>) -> Result<()> 
             )
         })?;
         for rule in file.rules {
-            specs.insert(rule.id.clone(), rule);
+            specs.insert(rule.id.clone(), (rule, false));
         }
     }
     Ok(())
