@@ -326,7 +326,9 @@ python3 -m unittest discover -s scripts -p test_stress_benchmark.py
 python3 scripts/check_package.py --allow-dirty
 ```
 
-[Benchmark methodology and reproduction](bench/README.md) separates synthetic
+[Independent synthetic evaluation](docs/INDEPENDENT_EVALUATION.md) records a
+frozen 88-sample holdout, its misses and false positives, and baseline workflow
+limits. [Benchmark methodology and reproduction](bench/README.md) separates synthetic
 labelled quality from unlabelled real-source throughput. Versions, commands,
 hardware, binary fingerprints, time, memory, parser completeness and unsupported
 capabilities are retained. Online verification is disabled. These measurements

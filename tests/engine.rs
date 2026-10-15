@@ -1468,6 +1468,36 @@ fn unquoted_configuration_references_do_not_hide_quoted_or_dotted_literals() {
 }
 
 #[test]
+fn rust_public_field_types_are_not_literal_credentials() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    let declarations = b"struct Settings {\n    pub access_token: String,\n    pub client_secret: std::string::String,\n}\n";
+    assert!(
+        engine
+            .scan_bytes("settings.rs", declarations)
+            .unwrap()
+            .is_empty()
+    );
+    // Scope the correction to public Rust declarations, not type-like passwords
+    // in configuration, quoted literals, or another assignment on the same line.
+    for (path, input) in [
+        ("settings.yaml", "password: String\n"),
+        ("settings.rs", "password = String;\n"),
+        ("settings.rs", "let password = \"String\";\n"),
+        (
+            "settings.rs",
+            "pub access_token: String, password=synthetic987;\n",
+        ),
+    ] {
+        assert!(
+            !engine
+                .scan_bytes(path, input.as_bytes())
+                .unwrap()
+                .is_empty()
+        );
+    }
+}
+
+#[test]
 fn generic_context_corrections_preserve_custom_names_and_quoted_tuples() {
     let engine = Engine::new(EngineConfig::default()).unwrap();
     for key in [
