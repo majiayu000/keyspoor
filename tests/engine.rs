@@ -1163,6 +1163,22 @@ fn engine_semantics_change_configuration_identity_from_previous_versions() {
         old.update(b"unkeyed\0");
         assert_ne!(engine.configuration_id(), old.finalize().to_hex().as_str());
     }
+    // Version 6 also encoded whether each rule came from the builtin catalog.
+    let actual_rules: Vec<_> = rules.iter().map(|rule| (rule, false)).collect();
+    let serialized = serde_json::to_vec(&(
+        &actual_rules,
+        config.enable_base64,
+        config.min_entropy,
+        config.min_confidence,
+    ))
+    .unwrap();
+    let mut old = blake3::Hasher::new();
+    old.update(b"secret-scan/configuration/v6\0");
+    old.update(env!("CARGO_PKG_VERSION").as_bytes());
+    old.update(&(serialized.len() as u64).to_le_bytes());
+    old.update(&serialized);
+    old.update(b"unkeyed\0");
+    assert_ne!(engine.configuration_id(), old.finalize().to_hex().as_str());
 }
 
 #[test]
@@ -1485,15 +1501,16 @@ fn custom_rule_with_builtin_id_keeps_rust_matches() {
             ..Default::default()
         })
         .unwrap();
-        let findings = engine
-            .scan_bytes("fixture.rs", b"pub password: SyntheticValueA93,\n")
-            .unwrap();
-        assert!(
-            findings
-                .iter()
-                .any(|f| f.rule_id == "generic-credential-unquoted"),
-            "custom rule must match with builtin_rules={builtin_rules}"
-        );
+        for visibility in ["pub", "pub(crate)", "pub(in crate :: settings)"] {
+            let input = format!("{visibility} password: SyntheticValueA93,\n");
+            let findings = engine.scan_bytes("fixture.rs", input.as_bytes()).unwrap();
+            assert!(
+                findings
+                    .iter()
+                    .any(|f| f.rule_id == "generic-credential-unquoted"),
+                "custom rule must match with builtin_rules={builtin_rules}, visibility={visibility}"
+            );
+        }
     }
 }
 
@@ -1525,6 +1542,102 @@ fn rust_public_field_types_are_not_literal_credentials() {
                 .is_empty()
         );
     }
+}
+
+#[test]
+fn rust_restricted_visibility_field_types_are_not_literal_credentials() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    for visibility in [
+        "pub(crate)",
+        "pub(self)",
+        "pub(super)",
+        "pub ( crate )",
+        "pub(in crate)",
+        "pub(in self)",
+        "pub(in super::super)",
+        "pub(in crate::settings)",
+        "pub ( in\tcrate :: settings )",
+        "pub(in crate::r#type)",
+        "pub(in crate::配置)",
+        "pub(in crate::_settings)",
+        // Source scanning is not tied to an edition; these paths are valid in 2015.
+        "pub(in settings)",
+        "pub(in ::settings)",
+        "pub(in::settings)",
+    ] {
+        let input = format!("    {visibility} access_token: String,\n");
+        assert!(
+            engine
+                .scan_bytes("settings.rs", input.as_bytes())
+                .unwrap()
+                .is_empty(),
+            "field type reported for {visibility}"
+        );
+    }
+}
+
+#[test]
+fn rust_visibility_filter_preserves_credential_boundaries() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    for visibility in [
+        "pub()",
+        "pub(foo)",
+        "pub(in)",
+        "pub(incrate)",
+        "pub(in crate settings)",
+        "pub(in crate:settings)",
+        "pub(in crate::)",
+        "pub(in crate :: ::settings)",
+        "pub(in crate::123)",
+        "pub(in crate::_)",
+        "pub(crate) trailing",
+    ] {
+        let input = format!("{visibility} access_token: String,\n");
+        assert!(
+            engine
+                .scan_bytes("settings.rs", input.as_bytes())
+                .unwrap()
+                .iter()
+                .any(|finding| finding.rule_id == "generic-credential-unquoted"),
+            "invalid visibility suppressed a credential: {visibility}"
+        );
+    }
+    for (path, input, expected) in [
+        ("settings.yaml", "pub(crate) password: String,\n", "String"),
+        ("settings.rs", "pub(crate) password = String;\n", "String"),
+        (
+            "settings.rs",
+            "pub(crate) password: \"String\",\n",
+            "String",
+        ),
+        (
+            "settings.rs",
+            "pub(crate) access_token: String, password=synthetic987;\n",
+            "synthetic987",
+        ),
+        (
+            "settings.rs",
+            "pub(in crate :: settings) access_token: String, password: synthetic987;\n",
+            "synthetic987",
+        ),
+    ] {
+        let findings = engine.scan_bytes(path, input.as_bytes()).unwrap();
+        assert!(
+            findings
+                .iter()
+                .any(|finding| &input[finding.start..finding.end] == expected),
+            "literal credential lost in {input}"
+        );
+    }
+    let provider = format!("ghp_{TOKEN}Ab3dEf7hIj9k");
+    let input = format!("pub(crate) access_token: {provider},\n");
+    assert!(
+        engine
+            .scan_bytes("settings.rs", input.as_bytes())
+            .unwrap()
+            .iter()
+            .any(|finding| finding.rule_id == "github-pat")
+    );
 }
 
 #[test]

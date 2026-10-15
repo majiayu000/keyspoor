@@ -105,6 +105,7 @@ pub struct Engine {
     keyword_rules: Vec<Vec<usize>>,
     unconditional: Vec<usize>,
     base64_candidates: Regex,
+    rust_visibility: Regex,
     enable_base64: bool,
     min_entropy: Option<f32>,
     fingerprint_key: Option<[u8; 32]>,
@@ -154,12 +155,20 @@ impl Engine {
                     .context("compiling keyword prefilter")?,
             )
         };
+        // A SimplePath has identifier segments separated by whole `::` tokens.
+        // Keep the match anchored to the current field's complete line prefix.
+        let path_segment =
+            r"(?:\$crate|(?:r#)?(?:\p{XID_Start}\p{XID_Continue}*|_\p{XID_Continue}+))";
+        let rust_visibility = Regex::new(&format!(
+            r"\Apub(?:[ \t]*\([ \t]*(?:crate|self|super|in(?:[ \t]+|[ \t]*::[ \t]*){path_segment}(?:[ \t]*::[ \t]*{path_segment})*)[ \t]*\))?\z"
+        ))?;
         Ok(Self {
             rules,
             keywords,
             keyword_rules: keyword_map.into_values().collect(),
             unconditional,
             base64_candidates: Regex::new(r"[A-Za-z0-9+/_-]{24,}={0,2}")?,
+            rust_visibility,
             enable_base64: config.enable_base64,
             min_entropy: config.min_entropy,
             fingerprint_key: config.fingerprint_key,
@@ -322,12 +331,13 @@ impl Engine {
                         && bytes[full_match.start()..secret.start()]
                             .trim_ascii_end()
                             .ends_with(b":")
-                        && bytes[..full_match.start()]
-                            .rsplit(|byte| *byte == b'\n')
-                            .next()
-                            .unwrap_or_default()
-                            .trim_ascii()
-                            == b"pub")
+                        && self.rust_visibility.is_match(
+                            bytes[..full_match.start()]
+                                .rsplit(|byte| *byte == b'\n')
+                                .next()
+                                .unwrap_or_default()
+                                .trim_ascii(),
+                        ))
                     || (matches!(
                         rule.spec.id.as_str(),
                         "generic-api-key" | "linkedin-client-id"
@@ -642,7 +652,7 @@ fn configuration_id(rules: &[CompiledRule], config: &EngineConfig) -> Result<Str
     let serialized =
         serde_json::to_vec(&settings).context("serializing rule configuration identity")?;
     let mut digest = blake3::Hasher::new();
-    digest.update(b"secret-scan/configuration/v6\0");
+    digest.update(b"secret-scan/configuration/v7\0");
     digest.update(env!("CARGO_PKG_VERSION").as_bytes());
     digest.update(&(serialized.len() as u64).to_le_bytes());
     digest.update(&serialized);
