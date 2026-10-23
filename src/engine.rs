@@ -650,8 +650,9 @@ fn rust_visibility_context(source: &str) -> impl FnMut(usize) -> Option<(usize, 
     let mut macro_definition = false;
     let mut declaration_depth = None;
     let mut previous_name: Option<&str> = None;
+    let mut context_exhausted = false;
     move |candidate| {
-        if candidate < offset {
+        if context_exhausted || candidate < offset {
             return None;
         }
         for token in tokens.by_ref() {
@@ -670,6 +671,12 @@ fn rust_visibility_context(source: &str) -> impl FnMut(usize) -> Option<(usize, 
                 }
                 TokenKind::Pound => macro_prefix = true,
                 TokenKind::OpenParen | TokenKind::OpenBrace | TokenKind::OpenBracket => {
+                    // Context only suppresses false positives. Fall back to
+                    // retaining findings rather than growing with hostile nesting.
+                    if groups.len() == 8192 {
+                        context_exhausted = true;
+                        return None;
+                    }
                     let declaration = declaration_depth == Some(groups.len());
                     if declaration && token.kind == TokenKind::OpenBrace {
                         declaration_depth = None;
@@ -744,6 +751,10 @@ fn rust_field_visibility(
     field_start: usize,
 ) -> bool {
     use ra_ap_rustc_lexer::{FrontmatterAllowed, TokenKind, tokenize};
+    // Bound the temporary normalization buffer as well as the delimiter stack.
+    if field_start - start > 4096 {
+        return false;
+    }
     let Ok(prefix) = std::str::from_utf8(&bytes[start..field_start]) else {
         return false;
     };
@@ -859,7 +870,7 @@ fn configuration_id(rules: &[CompiledRule], config: &EngineConfig) -> Result<Str
     let serialized =
         serde_json::to_vec(&settings).context("serializing rule configuration identity")?;
     let mut digest = blake3::Hasher::new();
-    digest.update(b"secret-scan/configuration/v12\0");
+    digest.update(b"secret-scan/configuration/v13\0");
     digest.update(env!("CARGO_PKG_VERSION").as_bytes());
     digest.update(&(serialized.len() as u64).to_le_bytes());
     digest.update(&serialized);

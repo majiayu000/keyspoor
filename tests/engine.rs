@@ -1179,6 +1179,7 @@ fn engine_semantics_change_configuration_identity_from_previous_versions() {
         b"secret-scan/configuration/v9\0",
         b"secret-scan/configuration/v10\0",
         b"secret-scan/configuration/v11\0",
+        b"secret-scan/configuration/v12\0",
     ] {
         let mut old = blake3::Hasher::new();
         old.update(previous);
@@ -1967,6 +1968,29 @@ fn rust_mismatched_macro_delimiters_keep_credential_findings() {
         assert!(
             engine
                 .scan_bytes("fixture.rs", source.as_bytes())
+                .unwrap()
+                .iter()
+                .any(|f| f.rule_id == "generic-credential-unquoted")
+        );
+    }
+}
+
+#[test]
+fn rust_pathological_context_preserves_candidate_findings() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    for source in [
+        format!(
+            "{}\npub(crate) password: KspDemo_7zQ2mX9pL4vN6sR8\n",
+            "{".repeat(16384)
+        ),
+        format!(
+            "pub(in /*{}*/ crate) password: KspDemo_7zQ2mX9pL4vN6sR8\n",
+            " ".repeat(16384)
+        ),
+    ] {
+        assert!(
+            engine
+                .scan_bytes("generated.rs", source.as_bytes())
                 .unwrap()
                 .iter()
                 .any(|f| f.rule_id == "generic-credential-unquoted")
