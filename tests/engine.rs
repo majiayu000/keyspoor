@@ -1176,6 +1176,7 @@ fn engine_semantics_change_configuration_identity_from_previous_versions() {
         b"secret-scan/configuration/v6\0",
         b"secret-scan/configuration/v7\0",
         b"secret-scan/configuration/v8\0",
+        b"secret-scan/configuration/v9\0",
     ] {
         let mut old = blake3::Hasher::new();
         old.update(previous);
@@ -1872,6 +1873,25 @@ fn rust_boolean_negation_does_not_hide_real_fields() {
                 .scan_bytes("fixture.rs", source.as_bytes())
                 .unwrap()
                 .is_empty()
+        );
+    }
+}
+
+#[test]
+fn rust_comments_after_visibility_keep_credential_findings() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    for source in [
+        "pub // password: KspDemo_7zQ2mX9pL4vN6sR8\nstruct S;",
+        "pub /* password: KspDemo_7zQ2mX9pL4vN6sR8\n*/ struct S;",
+        "struct S { pub(in /* password: KspDemo_7zQ2mX9pL4vN6sR8\n*/ crate) access_token: String }",
+    ] {
+        assert!(
+            engine
+                .scan_bytes("fixture.rs", source.as_bytes())
+                .unwrap()
+                .iter()
+                .any(|f| f.rule_id == "generic-credential-unquoted"
+                    && &source[f.start..f.end] == "KspDemo_7zQ2mX9pL4vN6sR8")
         );
     }
 }

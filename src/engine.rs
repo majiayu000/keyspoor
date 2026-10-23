@@ -286,7 +286,7 @@ impl Engine {
             }
         }
         let single_candidate = candidates.iter().filter(|&&active| active).take(2).count() == 1;
-        let mut rust_public_keywords = None;
+        let mut rust_code = None;
         for (id, rule) in self.rules.iter().enumerate() {
             if !candidates[id]
                 || rule
@@ -336,7 +336,7 @@ impl Engine {
                             &self.rust_visibility,
                             bytes,
                             full_match.start(),
-                            rust_public_keywords.get_or_insert_with(|| rust_public_keyword_offsets(bytes)),
+                            rust_code.get_or_insert_with(|| rust_code_offsets(bytes)),
                         ))
                     || (matches!(
                         rule.spec.id.as_str(),
@@ -638,13 +638,14 @@ fn logical_identity(path: &str) -> String {
         .into_owned()
 }
 
-fn rust_public_keyword_offsets(bytes: &[u8]) -> Vec<usize> {
+fn rust_code_offsets(bytes: &[u8]) -> (Vec<usize>, Vec<usize>) {
     use ra_ap_rustc_lexer::{FrontmatterAllowed, TokenKind, tokenize};
     let Ok(source) = std::str::from_utf8(bytes) else {
         // Uncertain source context must preserve findings.
-        return Vec::new();
+        return (Vec::new(), Vec::new());
     };
     let mut positions = Vec::new();
+    let mut identifiers = Vec::new();
     let mut offset = 0;
     let mut groups = Vec::new();
     let mut in_macro = false;
@@ -679,8 +680,11 @@ fn rust_public_keyword_offsets(bytes: &[u8]) -> Vec<usize> {
                 macro_definition = false;
             }
             _ => {
-                if !in_macro && token.kind == TokenKind::Ident && &source[offset..end] == "pub" {
-                    positions.push(offset);
+                if !in_macro && matches!(token.kind, TokenKind::Ident | TokenKind::RawIdent) {
+                    identifiers.push(offset);
+                    if &source[offset..end] == "pub" {
+                        positions.push(offset);
+                    }
                 }
                 macro_prefix = false;
             }
@@ -694,16 +698,22 @@ fn rust_public_keyword_offsets(bytes: &[u8]) -> Vec<usize> {
         }
         offset = end;
     }
-    positions
+    (positions, identifiers)
 }
 
 fn rust_field_visibility(
     visibility: &Regex,
     bytes: &[u8],
     field_start: usize,
-    public_keywords: &[usize],
+    code: &(Vec<usize>, Vec<usize>),
 ) -> bool {
     use ra_ap_rustc_lexer::{FrontmatterAllowed, TokenKind, tokenize};
+    // The candidate must itself begin a code identifier, not a truncated
+    // comment or literal following an otherwise real visibility keyword.
+    if code.1.binary_search(&field_start).is_err() {
+        return false;
+    }
+    let public_keywords = &code.0;
     let index = public_keywords.partition_point(|&offset| offset < field_start);
     let Some(&start) = index
         .checked_sub(1)
@@ -828,7 +838,7 @@ fn configuration_id(rules: &[CompiledRule], config: &EngineConfig) -> Result<Str
     let serialized =
         serde_json::to_vec(&settings).context("serializing rule configuration identity")?;
     let mut digest = blake3::Hasher::new();
-    digest.update(b"secret-scan/configuration/v9\0");
+    digest.update(b"secret-scan/configuration/v10\0");
     digest.update(env!("CARGO_PKG_VERSION").as_bytes());
     digest.update(&(serialized.len() as u64).to_le_bytes());
     digest.update(&serialized);
