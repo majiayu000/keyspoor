@@ -22,6 +22,9 @@ aho-corasick = "1"
 base64 = "0.22"
 regex = "1"
 regex-syntax = "0.8"
+ra-ap-rustc_lexer = "0.178"
+# The lexer requires matching Unicode 17 tables in ident and properties.
+unicode-ident = "=1.0.24"
 flate2 = "1"
 tar = "0.4"
 zip = { version = "4", default-features = false, features = ["deflate"] }

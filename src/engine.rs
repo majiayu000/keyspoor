@@ -160,7 +160,7 @@ impl Engine {
         let path_segment =
             r"(?:\$crate|(?:r#)?(?:\p{XID_Start}\p{XID_Continue}*|_\p{XID_Continue}+))";
         let rust_visibility = Regex::new(&format!(
-            r"\Apub(?:[ \t]*\([ \t]*(?:crate|self|super|in(?:[ \t]+|[ \t]*::[ \t]*){path_segment}(?:[ \t]*::[ \t]*{path_segment})*)[ \t]*\))?\z"
+            r"\Apub(?:[ \t]*\([ \t]*(?:crate|self|super|in(?:[ \t]+|[ \t]*::[ \t]*)(?P<path>{path_segment}(?:[ \t]*::[ \t]*{path_segment})*))[ \t]*\))?\z"
         ))?;
         Ok(Self {
             rules,
@@ -287,6 +287,11 @@ impl Engine {
             }
         }
         let single_candidate = candidates.iter().filter(|&&active| active).take(2).count() == 1;
+        let rust_public_keywords = if path.ends_with(".rs") && container.is_none() {
+            rust_public_keyword_offsets(bytes)
+        } else {
+            Vec::new()
+        };
         for (id, rule) in self.rules.iter().enumerate() {
             if !candidates[id]
                 || rule
@@ -331,12 +336,11 @@ impl Engine {
                         && bytes[full_match.start()..secret.start()]
                             .trim_ascii_end()
                             .ends_with(b":")
-                        && self.rust_visibility.is_match(
-                            bytes[..full_match.start()]
-                                .rsplit(|byte| *byte == b'\n')
-                                .next()
-                                .unwrap_or_default()
-                                .trim_ascii(),
+                        && rust_field_visibility(
+                            &self.rust_visibility,
+                            bytes,
+                            full_match.start(),
+                            &rust_public_keywords,
                         ))
                     || (matches!(
                         rule.spec.id.as_str(),
@@ -638,6 +642,111 @@ fn logical_identity(path: &str) -> String {
         .into_owned()
 }
 
+fn rust_public_keyword_offsets(bytes: &[u8]) -> Vec<usize> {
+    use ra_ap_rustc_lexer::{FrontmatterAllowed, TokenKind, tokenize};
+    let Ok(source) = std::str::from_utf8(bytes) else {
+        // Uncertain source context must preserve findings.
+        return Vec::new();
+    };
+    let mut positions = Vec::new();
+    let mut offset = 0;
+    for token in tokenize(source, FrontmatterAllowed::Yes) {
+        let end = offset + token.len as usize;
+        if token.kind == TokenKind::Ident && &source[offset..end] == "pub" {
+            positions.push(offset);
+        }
+        offset = end;
+    }
+    positions
+}
+
+fn rust_field_visibility(
+    visibility: &Regex,
+    bytes: &[u8],
+    field_start: usize,
+    public_keywords: &[usize],
+) -> bool {
+    let line_prefix = bytes[..field_start]
+        .rsplit(|byte| *byte == b'\n')
+        .next()
+        .unwrap_or_default()
+        .trim_ascii_start();
+    if public_keywords
+        .binary_search(&(field_start - line_prefix.len()))
+        .is_err()
+    {
+        return false;
+    }
+    let Some(captures) = visibility.captures(line_prefix.trim_ascii_end()) else {
+        return false;
+    };
+    let Some(path) = captures.name("path") else {
+        return true;
+    };
+    let Ok(path) = std::str::from_utf8(path.as_bytes()) else {
+        return false;
+    };
+    path.split("::").all(|segment| {
+        let segment = segment.trim();
+        if let Some(raw) = segment.strip_prefix("r#") {
+            return !matches!(raw, "crate" | "self" | "super" | "Self");
+        }
+        // Strict/reserved Rust keywords cannot name a module. The three
+        // path roots crate/self/super are allowed by restricted visibility.
+        !matches!(
+            segment,
+            "as" | "async"
+                | "await"
+                | "break"
+                | "const"
+                | "continue"
+                | "dyn"
+                | "else"
+                | "enum"
+                | "extern"
+                | "false"
+                | "fn"
+                | "for"
+                | "if"
+                | "impl"
+                | "in"
+                | "let"
+                | "loop"
+                | "match"
+                | "mod"
+                | "move"
+                | "mut"
+                | "pub"
+                | "ref"
+                | "return"
+                | "Self"
+                | "static"
+                | "struct"
+                | "trait"
+                | "true"
+                | "type"
+                | "unsafe"
+                | "use"
+                | "where"
+                | "while"
+                | "abstract"
+                | "become"
+                | "box"
+                | "do"
+                | "final"
+                | "gen"
+                | "macro"
+                | "override"
+                | "priv"
+                | "try"
+                | "typeof"
+                | "unsized"
+                | "virtual"
+                | "yield"
+        )
+    })
+}
+
 fn configuration_id(rules: &[CompiledRule], config: &EngineConfig) -> Result<String> {
     let actual_rules: Vec<_> = rules
         .iter()
@@ -652,7 +761,7 @@ fn configuration_id(rules: &[CompiledRule], config: &EngineConfig) -> Result<Str
     let serialized =
         serde_json::to_vec(&settings).context("serializing rule configuration identity")?;
     let mut digest = blake3::Hasher::new();
-    digest.update(b"secret-scan/configuration/v7\0");
+    digest.update(b"secret-scan/configuration/v8\0");
     digest.update(env!("CARGO_PKG_VERSION").as_bytes());
     digest.update(&(serialized.len() as u64).to_le_bytes());
     digest.update(&serialized);

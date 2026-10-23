@@ -1172,13 +1172,18 @@ fn engine_semantics_change_configuration_identity_from_previous_versions() {
         config.min_confidence,
     ))
     .unwrap();
-    let mut old = blake3::Hasher::new();
-    old.update(b"secret-scan/configuration/v6\0");
-    old.update(env!("CARGO_PKG_VERSION").as_bytes());
-    old.update(&(serialized.len() as u64).to_le_bytes());
-    old.update(&serialized);
-    old.update(b"unkeyed\0");
-    assert_ne!(engine.configuration_id(), old.finalize().to_hex().as_str());
+    for previous in [
+        b"secret-scan/configuration/v6\0",
+        b"secret-scan/configuration/v7\0",
+    ] {
+        let mut old = blake3::Hasher::new();
+        old.update(previous);
+        old.update(env!("CARGO_PKG_VERSION").as_bytes());
+        old.update(&(serialized.len() as u64).to_le_bytes());
+        old.update(&serialized);
+        old.update(b"unkeyed\0");
+        assert_ne!(engine.configuration_id(), old.finalize().to_hex().as_str());
+    }
 }
 
 #[test]
@@ -1680,5 +1685,75 @@ fn generic_context_corrections_preserve_custom_names_and_quoted_tuples() {
             .unwrap()
             .iter()
             .any(|finding| finding.rule_id == "github-pat")
+    );
+}
+
+#[test]
+fn rust_visibility_keywords_keep_credential_findings() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    for visibility in [
+        "pub(in fn)",
+        "pub(in crate::type)",
+        "pub(in Self)",
+        "pub(in crate::gen)",
+        "pub(in r#crate)",
+        "pub(in r#self)",
+    ] {
+        let input = format!("{visibility} password: KspDemo_7zQ2mX9pL4vN6sR8\n");
+        assert!(
+            engine
+                .scan_bytes("fixture.rs", input.as_bytes())
+                .unwrap()
+                .iter()
+                .any(|f| f.rule_id == "generic-credential-unquoted"),
+            "{visibility}"
+        );
+    }
+}
+
+#[test]
+fn rust_literal_and_comment_contents_keep_credential_findings() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    for (open, close) in [
+        ("r#\"", "\"#"),
+        ("br##\"", "\"##"),
+        ("cr###\"", "\"###"),
+        ("\"", "\""),
+        ("/*", "*/"),
+        ("/* outer /* nested */", "*/"),
+    ] {
+        for visibility in ["pub", "pub(crate)", "pub(in crate::settings)"] {
+            let input =
+                format!("{open}\n{visibility} password: KspDemo_7zQ2mX9pL4vN6sR8\n{close}\n");
+            assert!(
+                engine
+                    .scan_bytes("fixture.rs", input.as_bytes())
+                    .unwrap()
+                    .iter()
+                    .any(|f| f.rule_id == "generic-credential-unquoted"),
+                "{open} {visibility}"
+            );
+        }
+    }
+}
+
+#[test]
+fn rust_real_fields_after_literals_still_avoid_false_positives() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    let input = b"const NOTE: &str = r#\"not code: pub(crate)\"#;\n/* pub */\nstruct Config {\n    pub(crate) access_token: String,\n}\n";
+    assert!(engine.scan_bytes("fixture.rs", input).unwrap().is_empty());
+}
+
+#[test]
+fn rust_encoded_embedded_fields_keep_credential_findings() {
+    use base64::{Engine as _, engine::general_purpose};
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    let encoded =
+        general_purpose::STANDARD.encode("pub(crate) password: KspDemo_7zQ2mX9pL4vN6sR8\n");
+    let findings = engine.scan_bytes("fixture.rs", encoded.as_bytes()).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.is_base64_encoded && f.rule_id == "generic-credential-unquoted")
     );
 }
