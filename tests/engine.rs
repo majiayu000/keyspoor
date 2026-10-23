@@ -1173,10 +1173,11 @@ fn engine_semantics_change_configuration_identity_from_previous_versions() {
     ))
     .unwrap();
     for previous in [
-        b"secret-scan/configuration/v6\0",
+        b"secret-scan/configuration/v6\0".as_slice(),
         b"secret-scan/configuration/v7\0",
         b"secret-scan/configuration/v8\0",
         b"secret-scan/configuration/v9\0",
+        b"secret-scan/configuration/v10\0",
     ] {
         let mut old = blake3::Hasher::new();
         old.update(previous);
@@ -1569,6 +1570,11 @@ fn rust_restricted_visibility_field_types_are_not_literal_credentials() {
         "pub(in crate::r#type)",
         "pub(in crate::配置)",
         "pub(in crate::_settings)",
+        "pub(in crate::async)",
+        "pub(in crate::await)",
+        "pub(in crate::dyn)",
+        "pub(in crate::try)",
+        "pub(in crate::gen)",
         // Source scanning is not tied to an edition; these paths are valid in 2015.
         "pub(in settings)",
         "pub(in ::settings)",
@@ -1699,7 +1705,6 @@ fn rust_visibility_keywords_keep_credential_findings() {
         "pub(in fn)",
         "pub(in crate::type)",
         "pub(in Self)",
-        "pub(in crate::gen)",
         "pub(in r#crate)",
         "pub(in r#self)",
     ] {
@@ -1892,6 +1897,41 @@ fn rust_comments_after_visibility_keep_credential_findings() {
                 .iter()
                 .any(|f| f.rule_id == "generic-credential-unquoted"
                     && &source[f.start..f.end] == "KspDemo_7zQ2mX9pL4vN6sR8")
+        );
+    }
+}
+
+#[test]
+fn rust_raw_field_identifiers_avoid_false_positives() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    for visibility in ["pub", "pub(crate)", "pub(in /* scope */ crate)"] {
+        let source = format!("struct S {{\n {visibility} r#password: String,\n}}");
+        assert!(
+            engine
+                .scan_bytes("fixture.rs", source.as_bytes())
+                .unwrap()
+                .is_empty()
+        );
+    }
+}
+
+#[test]
+fn rust_declarative_macro_bodies_keep_credential_findings() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    for signature in [
+        "macro config()",
+        "macro r#config($value:ident)",
+        "macro config",
+    ] {
+        let source = format!(
+            "#![feature(decl_macro)]\n{signature} {{\n pub(crate) password: KspDemo_7zQ2mX9pL4vN6sR8\n}}"
+        );
+        assert!(
+            engine
+                .scan_bytes("fixture.rs", source.as_bytes())
+                .unwrap()
+                .iter()
+                .any(|f| f.rule_id == "generic-credential-unquoted")
         );
     }
 }
