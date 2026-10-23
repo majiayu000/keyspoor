@@ -1178,6 +1178,7 @@ fn engine_semantics_change_configuration_identity_from_previous_versions() {
         b"secret-scan/configuration/v8\0",
         b"secret-scan/configuration/v9\0",
         b"secret-scan/configuration/v10\0",
+        b"secret-scan/configuration/v11\0",
     ] {
         let mut old = blake3::Hasher::new();
         old.update(previous);
@@ -1925,6 +1926,43 @@ fn rust_declarative_macro_bodies_keep_credential_findings() {
     ] {
         let source = format!(
             "#![feature(decl_macro)]\n{signature} {{\n pub(crate) password: KspDemo_7zQ2mX9pL4vN6sR8\n}}"
+        );
+        assert!(
+            engine
+                .scan_bytes("fixture.rs", source.as_bytes())
+                .unwrap()
+                .iter()
+                .any(|f| f.rule_id == "generic-credential-unquoted")
+        );
+    }
+}
+
+#[test]
+fn rust_doc_comments_are_not_visibility_trivia() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    for comment in [
+        "/** rationale */",
+        "/*! rationale */",
+        "/// rationale\n",
+        "//! rationale\n",
+    ] {
+        let source = format!("pub(in {comment} crate) password: KspDemo_7zQ2mX9pL4vN6sR8\n");
+        assert!(
+            engine
+                .scan_bytes("fixture.rs", source.as_bytes())
+                .unwrap()
+                .iter()
+                .any(|f| f.rule_id == "generic-credential-unquoted")
+        );
+    }
+}
+
+#[test]
+fn rust_mismatched_macro_delimiters_keep_credential_findings() {
+    let engine = Engine::new(EngineConfig::default()).unwrap();
+    for (open, wrong, close) in [("{", ")", "}"), ("(", "]", ")"), ("[", "}", "]")] {
+        let source = format!(
+            "config! {open} {wrong}\n pub(crate) password: KspDemo_7zQ2mX9pL4vN6sR8\n{close}"
         );
         assert!(
             engine

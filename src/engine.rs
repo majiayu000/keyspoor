@@ -674,12 +674,25 @@ fn rust_visibility_context(source: &str) -> impl FnMut(usize) -> Option<(usize, 
                     if declaration && token.kind == TokenKind::OpenBrace {
                         declaration_depth = None;
                     }
-                    groups.push(in_macro);
+                    groups.push((token.kind, in_macro));
                     in_macro |= macro_prefix || declaration;
                     macro_prefix = false;
                 }
                 TokenKind::CloseParen | TokenKind::CloseBrace | TokenKind::CloseBracket => {
-                    in_macro = groups.pop().unwrap_or(false);
+                    let matches = groups.last().is_some_and(|(opener, _)| {
+                        matches!(
+                            (opener, token.kind),
+                            (TokenKind::OpenParen, TokenKind::CloseParen)
+                                | (TokenKind::OpenBrace, TokenKind::CloseBrace)
+                                | (TokenKind::OpenBracket, TokenKind::CloseBracket)
+                        )
+                    });
+                    if matches {
+                        in_macro = groups.pop().expect("matching opener exists").1;
+                    } else {
+                        // Malformed delimiters cannot establish ordinary field context.
+                        in_macro = true;
+                    }
                     macro_prefix = false;
                 }
                 TokenKind::Ident | TokenKind::RawIdent if macro_prefix => {
@@ -714,7 +727,7 @@ fn rust_visibility_context(source: &str) -> impl FnMut(usize) -> Option<(usize, 
                 let at_identifier = candidate == start
                     || (token.kind == TokenKind::RawIdent && candidate == start + 2);
                 return if code_identifier && at_identifier {
-                    last_pub.map(|public| (public, start))
+                    last_pub.take().map(|public| (public, start))
                 } else {
                     None
                 };
@@ -740,8 +753,10 @@ fn rust_field_visibility(
         let end = offset + token.len as usize;
         match token.kind {
             TokenKind::Whitespace
-            | TokenKind::LineComment { .. }
-            | TokenKind::BlockComment { .. } => normalized.push(' '),
+            | TokenKind::LineComment { doc_style: None }
+            | TokenKind::BlockComment {
+                doc_style: None, ..
+            } => normalized.push(' '),
             TokenKind::Ident
             | TokenKind::RawIdent
             | TokenKind::OpenParen
@@ -844,7 +859,7 @@ fn configuration_id(rules: &[CompiledRule], config: &EngineConfig) -> Result<Str
     let serialized =
         serde_json::to_vec(&settings).context("serializing rule configuration identity")?;
     let mut digest = blake3::Hasher::new();
-    digest.update(b"secret-scan/configuration/v11\0");
+    digest.update(b"secret-scan/configuration/v12\0");
     digest.update(env!("CARGO_PKG_VERSION").as_bytes());
     digest.update(&(serialized.len() as u64).to_le_bytes());
     digest.update(&serialized);
