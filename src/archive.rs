@@ -189,8 +189,13 @@ impl State<'_> {
                     if entry.is_dir() {
                         continue;
                     }
-                    let path = format!("{name}!{}", entry.name());
-                    let member_identity = format!("{identity}!{}", entry.name());
+                    // A name zip cannot decode still gets scanned, under its raw bytes.
+                    let member = entry.name().map_or_else(
+                        |_| String::from_utf8_lossy(entry.name_raw()).into_owned(),
+                        |decoded| decoded.into_owned(),
+                    );
+                    let path = format!("{name}!{member}");
+                    let member_identity = format!("{identity}!{member}");
                     match self.read(&path, &mut entry) {
                         Ok(Some(data)) => self.member(&path, &member_identity, &data, depth + 1),
                         Ok(None) => break,
